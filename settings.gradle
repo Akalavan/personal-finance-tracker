@@ -1,13 +1,11 @@
 rootProject.name = "personal-finance-tracker"
 
 include(
-    "gateway",
     "config-server",
-    "discovery-server",
+    "gateway",
+    "eureka-discovery-server",
     "auth-service",
-    "finance-service",
+    "cash-flow-service",
     "investment-service",
-    "report-service",
-    "notification-service",
     "common"
 )

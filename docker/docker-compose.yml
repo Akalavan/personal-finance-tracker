@@ -1,0 +1,137 @@
+name: "personal-finance-tracker"
+version: '3.8'
+
+services:
+    postgres:
+        image: postgres:16
+        container_name: personal-finance-db
+        environment:
+            POSTGRES_DB: personal_finance
+            POSTGRES_USER: finance_user
+            POSTGRES_PASSWORD: finance_user
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+        networks:
+            - finance-network
+    config-server:
+        image: config-server:latest
+        container_name: config
+        build:
+            dockerfile: ../config-server/Dockerfile
+            context: ../config-server
+        ports:
+            - "8071:8071"
+        networks:
+            - finance-network
+        depends_on:
+            - postgres
+        healthcheck:
+            test: [ "CMD", "curl", "-f", "-X", "GET", "http://localhost:8071/actuator/health" ]
+            interval: 3s
+            timeout: 2s
+            retries: 3
+    cash-flow-service:
+        image: cash-flow-service-multi:latest
+        container_name: cash-flow-service
+        build:
+            dockerfile: ../cash-flow-service/Dockerfile
+            context: ../cash-flow-service
+        ports:
+            - "8081:8081"
+        environment:
+            SPRING_PROFILES_ACTIVE: default
+            SPRING_CLOUD_CONFIG_URI: http://config:8071
+        networks:
+            - finance-network
+        depends_on:
+            eureka-discovery-service:
+                condition: service_healthy
+    eureka-discovery-service:
+        image: eureka-discovery-server:latest
+        container_name: eureka-discovery-service
+        build:
+            dockerfile: ../eureka-discovery-server/Dockerfile
+            context: ../eureka-discovery-server
+        restart: "no"
+        ports:
+            - "8070:8070"
+        environment:
+            SPRING_PROFILES_ACTIVE: default
+            SPRING_CLOUD_CONFIG_URI: http://config:8071
+        depends_on:
+            config-server:
+                condition: service_healthy
+        healthcheck:
+            test: [ "CMD", "curl", "-f", "-X", "GET", "http://localhost:8070/actuator/health" ]
+            interval: 3s
+            timeout: 2s
+            retries: 3
+        networks:
+            - finance-network
+    investment-service:
+        image: investment-service:latest
+        container_name: investment-service
+        build:
+            dockerfile: ../investment-service/Dockerfile
+            context: ../investment-service
+        restart: "no"
+        ports:
+            - "8082:8082"
+            - "5005:5005"
+        environment:
+            SPRING_PROFILES_ACTIVE: default
+            SPRING_CLOUD_CONFIG_URI: http://config:8071
+            JAVA_OPTS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005
+        depends_on:
+            eureka-discovery-service:
+                condition: service_healthy
+        healthcheck:
+            test: [ "CMD", "curl", "-f", "-X", "GET", "http://localhost:8082/actuator/health" ]
+            interval: 3s
+            timeout: 2s
+            retries: 3
+        networks:
+            - finance-network
+    gateway-server:
+        image: gateway:latest
+        container_name: gateway-server
+        build:
+            dockerfile: ../gateway/Dockerfile
+            context: ../gateway
+        restart: "no"
+        ports:
+            - "8090:8090"
+        environment:
+            SPRING_PROFILES_ACTIVE: default
+            SPRING_CLOUD_CONFIG_URI: http://config:8071
+        healthcheck:
+            test: [ "CMD", "curl", "-f", "-X", "GET", "http://localhost:8090/actuator/health" ]
+            interval: 3s
+            timeout: 2s
+            retries: 3
+        depends_on:
+            eureka-discovery-service:
+                condition: service_healthy
+        networks:
+            - finance-network
+    keycloak:
+        image: keycloak
+        restart: always
+        environment:
+            KEYCLOAK_USER: admin # Имя пользователя для доступа к консоли администратора Keycloak
+            KEYCLOAK_PASSWORD: admin
+        ports:
+            - "8083:8083"
+        networks:
+            finance-network:
+                aliases:
+                    - "keycloak"
+
+volumes:
+    postgres_data:
+
+networks:
+    finance-network:
+        driver: bridge

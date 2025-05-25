@@ -1,0 +1,31 @@
+server:
+    port: 8072 # local 8072; VM 8071
+
+spring:
+    application:
+        name: config-server
+    profiles:
+        active: native #, git #, vault # профиля (последний самый приоритетный)
+    cloud:
+        config:
+            server:
+                native: # конфиги находятся локально где-то на сервере
+                    search-locations: classpath:/config
+                git: # через гит
+                    uri: https://github.com/Akalavan/config
+                    search-paths: personalfinancetracker
+                encrypt:
+                    enabled: true
+#                vault: # секреты
+#                    kv-version: 2
+#                    port: 8200
+#                    host: localhost
+
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health
+encrypt:
+    key: secretkey

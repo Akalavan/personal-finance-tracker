@@ -1,0 +1,26 @@
+spring:
+    application:
+        name: cash-flow-service
+    datasource:
+        username: finance_user
+        password: '{cipher}e05800ac0c8c26d5503d357af9155eb8f9515db437cb878fa7f417268c26e8a0'
+        url: jdbc:postgresql://personal-finance-db:5432/personal_finance
+
+
+server:
+    port: 8081
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health,info,env
+
+eureka:
+    instance:
+        prefer-ip-address: true # Регистрировать IP-адрес службы вместо имени сервера
+    client:
+        register-with-eureka: true # Регистрировать службу в Eureka
+        fetch-registry: true # Извлекать локальную копию реестра
+        service-url:
+            defaultZone: http://localhost:8070/eureka/ # Местоположение службы Eureka

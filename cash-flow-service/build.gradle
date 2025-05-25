@@ -1,0 +1,54 @@
+plugins {
+    id("java")
+    id("org.springframework.boot")
+    id("io.spring.dependency-management")
+    id 'com.palantir.docker' version '0.36.0'
+}
+
+dependencies {
+    implementation('org.springframework.boot:spring-boot-starter-actuator')
+    implementation('org.springframework.boot:spring-boot-starter-web')
+    implementation('org.springframework.boot:spring-boot-starter-hateoas')
+    implementation('org.springframework.cloud:spring-cloud-starter-config')
+    implementation('org.springframework.boot:spring-boot-starter-data-jpa')
+    implementation ('org.springframework.cloud:spring-cloud-starter-netflix-eureka-client')
+    implementation('org.postgresql:postgresql')
+    compileOnly ('org.projectlombok:lombok') // Используйте актуальную версию
+    annotationProcessor ('org.projectlombok:lombok') // Та же версия
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+ext {
+    set('springCloudVersion', "2024.0.0")
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+
+docker {
+    // Название Docker-образа
+    name "pft/${project.name}:${project.version}"
+
+    // Файлы, передаваемые в образ (в том числе для stage build)
+    files provider { tasks.bootJar.archiveFile.get().asFile }
+
+    // Аргумент JAR_FILE для Dockerfile
+    buildArgs(['JAR_FILE': tasks.bootJar.archiveFile.get().asFile.name])
+
+    // Путь к Dockerfile
+    dockerfile file('Dockerfile')
+
+    // Убедись, что bootJar собирается перед docker
+    dependsOn tasks.bootJar
+}
+
+tasks.named("dockerPrepare") {
+    dependsOn tasks.bootJar
+}
+
+
+

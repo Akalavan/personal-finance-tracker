@@ -1,0 +1,12 @@
+server:
+    port: 8070
+eureka:
+    instance:
+        hostname: localhost # Имя хоста, где находится экземпляр Eureka
+    client:
+        registerWithEureka: false # Запретить серверу Config Server регистрироваться в службе Eureka
+        fetchRegistry: false # не кешировать информацию из реестра
+        serviceUrl: # URL службы
+            defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+    server:
+        waitTimeInMsWhenSyncEmpty: 5 # Начальное время ожидания, прежде чем сервер начнет принимать запросы

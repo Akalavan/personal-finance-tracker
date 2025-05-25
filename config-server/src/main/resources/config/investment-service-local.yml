@@ -1,0 +1,75 @@
+spring:
+    application:
+        name: investment-service
+    datasource:
+        username: postgres
+        password: root
+        url: jdbc:postgresql://localhost:5434/personal_finance
+
+
+server:
+    port: 8089
+
+management:
+    endpoints:
+        web:
+            exposure:
+                include: health,info,env,circuitbreakers
+    health:
+        show-details: always
+
+eureka:
+    instance:
+        prefer-ip-address: true # Регистрировать IP-адрес службы вместо имени сервера
+    client:
+        register-with-eureka: true # Регистрировать службу в Eureka
+        fetch-registry: true # Извлекать локальную копию реестра
+        service-url:
+            defaultZone: http://localhost:8073/eureka/ # Местоположение службы Eureka
+
+resilience4j:
+    circuitbreaker:
+        instances:
+            stockService: # Конфигурация экземпляра службы лицензий (имя, данное размыкателю цепи в аннотации)
+                register-health-indicator: true # Следует ли экспортировать конфигурацию через конечную точку health
+                sliding-window-size: 5 # Размер кольцевого буфера для замкнутого состояния
+                sliding-window-type: COUNT_BASED
+                minimum-number-of-calls: 5
+                permittedNumberOfCallsInHalfOpenState: 3 # Размер кольцевого буфера для полуоткрытого состояния
+                waitDurationInOpenState: 10s # Продолжительность ожидания в разомкнутом состоянии
+                failureRateThreshold: 50 # Порог частоты отказов в процентах
+                recordExceptions: # Исключения, которые должны расцениваться как сбои
+                    - org.springframework.web.client.HttpServerErrorException
+                    - java.io.IOException
+                    - java.util.concurrent.TimeoutException
+                    - org.springframework.web.client.ResourceAccessException
+            stockServiceWithOrg: # Конфигурация экземпляра службы лицензий взаимодействия с категориями (имя, данное размыкателю цепи в аннотации)
+                register-health-indicator: true # Следует ли экспортировать конфигурацию через конечную точку health
+                sliding-window-size: 3 # Размер кольцевого буфера для замкнутого состояния
+                sliding-window-type: COUNT_BASED
+                minimum-number-of-calls: 3
+                permittedNumberOfCallsInHalfOpenState: 3 # Размер кольцевого буфера для полуоткрытого состояния
+                waitDurationInOpenState: 10s # Продолжительность ожидания в разомкнутом состоянии
+                failureRateThreshold: 50 # Порог частоты отказов в процентах
+    bulkhead:
+        instances:
+            bulkheadStockService:
+                max-wait-duration: # Максимальная продолжительность блокировки потока
+                    nanos: 100000000
+                max-concurrent-calls: 20 # Максимальное количество одновременных вызовов
+    thread-pool-bulkhead:
+        instances:
+            bulkheadStockService:
+                max-thread-pool-size: 1 # Максимальное количество потоков в пуле
+                core-thread-pool-size: 1 # Размер основного пула потоков
+                queue-capacity: 1 # Вместимость очереди
+                keep-alive-duration: # Максимальное время, в течение которого простаивающие потоки ждут новых заданий перед завершением
+                    nanos: 20000000
+    retry:
+        instances:
+            retryStockService:
+                max-attempts: 5 # Максимальное количество повторных попыток
+                wait-duration:
+                    seconds: 1 # Время ожидания между попытками
+                retry-exceptions: # Список исключений, после которых можно выполнять повторные попытки
+                    - java.util.concurrent.TimeoutException

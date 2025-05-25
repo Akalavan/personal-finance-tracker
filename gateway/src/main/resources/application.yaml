@@ -1,0 +1,12 @@
+spring:
+    application:
+        name: gateway-server
+    config:
+        import: "configserver:"
+    profiles:
+        active: local # local, dev, default
+    cloud:
+        config:
+            uri: http://localhost:8072 # http://localhost:8072 - local, http://localhost:8071 - VM docker
+
+

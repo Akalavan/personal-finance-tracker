@@ -1,0 +1,13 @@
+spring:
+    application:
+        name: eureka-discovery-server
+    cloud:
+        config:
+            uri: http://localhost:8072 # http://localhost:8072 - local, http://localhost:8071 - VM docker
+        loadbalancer:
+            ribbon:
+              enabled: false
+    config:
+        import: "configserver:"
+    profiles:
+        active: local # local, dev, default
