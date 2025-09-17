@@ -6,7 +6,6 @@ spring:
         password: root
         url: jdbc:postgresql://localhost:5434/personal_finance
 
-
 server:
     port: 8088
 
@@ -24,3 +23,13 @@ eureka:
         fetch-registry: true # Извлекать локальную копию реестра
         service-url:
             defaultZone: http://localhost:8073/eureka/ # Местоположение службы Eureka
+
+keycloak:
+    realm: spmia-realm # Имя пространства
+    auth-server-url: http://localhost:8083/auth # URL конечной точки Auth сервера Keycloak: http://<keycloak_server_url>/auth
+    ssl-required: external
+    resource: pft # Идентификатор клиента
+    credentials:
+        secret: I9Nb77rAxt3qJMIFOUQecPNRNIb92Uyd # Секретный ключ клиента
+    use-resource-role-mappings: true
+    bearer-only: true

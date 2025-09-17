@@ -1,5 +1,6 @@
 package ru.akalavan.cashflowservice.controller;
 
+import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +19,7 @@ public class CategoryRestController {
     private final CategoryService categoryService;
 
     @GetMapping
+    @RolesAllowed({"ADMIN", "USER"})
     public Category getCategory(@PathVariable int categoryId) {
         /**
          * clientType

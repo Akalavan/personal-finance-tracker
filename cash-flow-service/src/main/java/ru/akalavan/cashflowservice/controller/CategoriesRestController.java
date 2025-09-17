@@ -1,5 +1,6 @@
 package ru.akalavan.cashflowservice.controller;
 
+import jakarta.annotation.security.RolesAllowed;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,7 @@ public class CategoriesRestController {
     private final MessageSource messageSource;
 
     @PostMapping
+    @RolesAllowed("ADMIN")
     public ResponseEntity<Category> createCategory(@RequestBody NewCategoryDto payload,
                                                    BindingResult bindingResult,
                                                    UriComponentsBuilder uriComponentsBuilder,
@@ -54,6 +56,7 @@ public class CategoriesRestController {
     }
 
     @GetMapping
+    @RolesAllowed({"ADMIN", "USER"})
     public Iterable<Category> findAllCategory() {
         return categoryService.findAllCategories();
     }
